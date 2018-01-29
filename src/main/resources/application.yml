@@ -1,6 +1,6 @@
 spring:
   application:
-    name: discover.medical.dynamichealthloader
+    name: discover.medical.dmp2.search.poc
     version: ${APP_VERSION:unknown}
   jackson:
     default-property-inclusion: non_null
