@@ -1,0 +1,170 @@
+// Plugin imports
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
+buildscript {
+	ext {
+		springBootVersion = '1.5.2.RELEASE'
+		gradleDockerPluginVersion = '3.0.7'
+		jfrogBuildInfoPluginVersion = '4.4.12'
+		elasticVersion 			= '5.2.2'
+		awsSDKVersion = '1.11.109'
+		sonarGradlePluginVersion = '2.5'
+	}
+
+	repositories {
+		maven {
+			url 'https://eis.jfrog.io/eis/plugins-release'
+			// the actual settings are pulled from your ~/.gradle/gradle.properties or from a
+			//  gradle.properties file in ${projectDir}
+			credentials {
+				username = project.artifactory_user
+				password = project.artifactory_password
+			}
+		}
+	}
+
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("com.bmuschko:gradle-docker-plugin:${gradleDockerPluginVersion}")
+		classpath "org.jfrog.buildinfo:build-info-extractor-gradle:${jfrogBuildInfoPluginVersion}"
+		classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.5"
+	}
+}
+
+plugins {
+	// include git information
+	// http://docs.spring.io/spring-boot/docs/current/reference/html/howto-build.html#howto-git-info
+	id "com.gorylenko.gradle-git-properties" version "1.4.17"
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'com.bmuschko.docker-java-application'
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'jacoco'
+
+
+artifactory {
+	//The base Artifactory URL if not overridden by the publisher/resolver
+	// Actual setting is pulled from ~/.gradle/gradle.properties or ${projectDir}/gradle.properties, if present
+	contextUrl = project.artifactory_contextUrl
+	resolve {
+		repository {
+			repoKey = 'libs-release'
+			username = project.artifactory_user
+			password = project.artifactory_password
+		}
+	}
+	publish {
+		repository {
+			repoKey = 'libs-release-local'
+			username = project.artifactory_user
+			password = project.artifactory_password
+			maven = true
+
+		}
+	}
+}
+
+jar {
+	baseName = 'dmp2'
+	version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+
+configurations.all {
+	exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+	exclude group: "ch.qos.logback", module: "logback-classic"
+}
+
+configurations {
+	runtime.exclude group:"ch.qos.logback", module: "logback-classic"
+
+	integrationTestCompile.extendsFrom testCompile
+	integrationTestRuntime.extendsFrom testRuntime
+}
+
+
+dependencyManagement {
+	imports {
+		mavenBom "com.ebsco.starter:ebsco-starter-spring-boot:2.0.0.RELEASE"
+		mavenBom "com.ebsco.starter:ebsco-starter-logging:2.0.0.RELEASE"
+		mavenBom "com.ebsco.starter:ebsco-starter-metrics:2.0.0.RELEASE"
+	}
+	dependencies {
+		dependency "com.ebsco.common:lib-platform-shared-logging-core:1.3.7.RELEASE"
+		dependency "com.ebsco.common:lib-platform-shared-metric-core:1.1.1.RELEASE"
+	}
+}
+
+// Note: Some dependencies are disabled for now until they are fully operational
+dependencies {
+	compile('com.ebsco.common:lib-platform-shared-logging-core')
+	compile('com.ebsco.common:lib-platform-shared-metric-core')
+
+	compile('org.springframework.boot:spring-boot-starter-log4j2')
+	compile('org.springframework.boot:spring-boot-starter-actuator')
+	//compile('org.springframework.cloud:spring-cloud-starter-aws')
+	compile('org.springframework.cloud:spring-cloud-starter-eureka')
+	// compile('org.springframework.cloud:spring-cloud-starter-hystrix')
+	// compile('org.springframework.cloud:spring-cloud-starter-hystrix-dashboard')
+	// compile('org.springframework.cloud:spring-cloud-starter-sleuth')
+	//compile('org.springframework.cloud:spring-cloud-starter-zipkin')
+	//compile('org.springframework.cloud:spring-cloud-sleuth-zipkin')
+	// compile('org.springframework.boot:spring-boot-starter-hateoas')
+	compile('org.springframework.boot:spring-boot-starter-validation')
+	compile('org.springframework.boot:spring-boot-starter-web')
+
+	compile('discover.shared:lib-discover-shared-beanbag:1.3.5')
+
+	compile('org.apache.commons:commons-lang3:3.5')
+	compile('commons-io:commons-io:2.4')
+
+	// DH ElasticSearch resources
+	compile 'discover.medical.dynamichealth:discover.medical.dynamichealth.elasticsearch:1.3.53'
+
+	// AWS SDK modules
+	compile group: 'com.amazonaws', name: 'aws-java-sdk-core', version: "${project.ext['awsSDKVersion']}", transitive: true
+	compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: "${project.ext['awsSDKVersion']}", transitive: true
+	compile group: 'com.amazonaws', name: 'aws-java-sdk-sqs', version: "${project.ext['awsSDKVersion']}", transitive: true
+	compile group: 'com.amazonaws', name: 'aws-java-sdk-sns', version: "${project.ext['awsSDKVersion']}", transitive: true
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
+
+	// Swagger dependencies
+	compile group:'io.springfox', name: 'springfox-swagger2', 	version:"2.6.1", transitive: true
+	compile group:'io.springfox', name: 'springfox-swagger-ui', version:"2.6.1", transitive: true
+
+	// ElasticSearch
+	// only enable if you really need it
+	// compile group: 'org.elasticsearch.client', name: 'transport', version: "${project.ext['elasticVersion']}", transitive: true
+	// compile group: 'org.elasticsearch', name: 'elasticsearch', version: "${project.ext['elasticVersion']}", transitive: true
+	compile group: 'org.elasticsearch.client', name: 'rest', version: "${project.ext['elasticVersion']}", transitive: true
+	compile group: 'org.elasticsearch.client', name: 'sniffer', version: "${project.ext['elasticVersion']}", transitive: true
+	compile group: 'org.elasticsearch', name: 'elasticsearch', version: "${project.ext['elasticVersion']}", transitive: true
+
+	// compile('io.searchbox:jest:2.0.0')
+
+	compile('com.jayway.jsonpath:json-path:2.2.0')
+	compile('org.json:json:20140107');
+
+	// embedded elastic - https://github.com/allegro/embedded-elasticsearch
+	testCompile 'pl.allegro.tech:embedded-elasticsearch:2.1.0'
+
+}
+
+springBoot  {
+	// add build information
+	// see http://docs.spring.io/spring-boot/docs/current/reference/html/howto-build.html#howto-build-info
+	buildInfo()
+}
+
+task buildImage(type: DockerBuildImage) {
+	inputDir = file("${projectDir}")
+	tag = 'ebsco/discover.medical.dmp2'
+}
+

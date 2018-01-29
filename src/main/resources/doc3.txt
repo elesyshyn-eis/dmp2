@@ -1,0 +1,28 @@
+{
+    "sections": [
+        {
+            "breadcrumb": "Title",
+            "content":  "[ Neuroblastoma | 99345 ] in [ adults | 675411 ] with regional disease.",
+            "heading": "Title",
+            "weight": 2.0
+        },
+        {
+            "breadcrumb": "History and Physical|Clinical Presentation",
+            "content": "neck mass or swelling",
+            "heading": "Clinical Presentation",
+            "weight": 0.5
+        },
+        {
+            "breadcrumb": "History and Physical|Clinical Presentation|Paraneoplastic syndromes",
+            "content": "opsoclonus myoclonus ataxia syndrome [ (OMS) | 874333 ] may occur in 2%-3%",
+            "heading": "Paraneoplastic syndromes",
+            "weight": 0.5
+        },
+        {
+            "breadcrumb": "History and Physical|Clinical Presentation|General considerations",
+            "content": "oncologic emergencies requiring immediate intervention are rare, but can include spinal cord compression due to epidural or intradural tumor extension",
+            "heading": "General considerations",
+            "weight": 0.5
+        }
+    ]
+}

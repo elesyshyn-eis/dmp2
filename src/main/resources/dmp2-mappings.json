@@ -1,0 +1,25 @@
+
+{
+  "dmp2": {
+    "properties": {
+      "sections": {
+        "type": "nested",
+        "properties": {
+          "heading": {
+            "type": "text"
+          },
+	    "breadcrumb": {
+            "type": "text"
+          },  
+          "content": {
+            "type": "text",
+            "term_vector": "with_positions_offsets"
+          },
+          "weight": {
+            "type": "integer"
+          }                         
+        }
+      }    
+    }
+  }
+}

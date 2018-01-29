@@ -1,0 +1,22 @@
+{
+    "sections": [
+        {
+            "breadcrumb": "Title",
+            "content":  "[ Physical Assessment | 12345 | 81345 ] in [ adults | 675411 ] with pancolitis.",
+            "heading": "Title",
+            "weight": 2.0
+        },
+        {
+            "breadcrumb": "History and Physical|Clinical Presentation|Metastatic disease",
+            "content": "ill appearance, fever, irritability, weight loss common.",
+            "heading": "Metastatic disease",
+            "weight": 0.5
+        },
+        {
+            "breadcrumb": "History and Physical|Clinical Presentation|Localized or regional disease",
+            "content": "abdominal, pelvic, thoracic, or [ cervical mass | 432944 | 86464 ]",
+            "heading": "Localized or regional disease",
+            "weight": 0.5
+        }
+    ]
+}

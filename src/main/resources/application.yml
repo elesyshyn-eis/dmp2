@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: discover.medical.dynamichealthloader
+    version: ${APP_VERSION:unknown}
+  jackson:
+    default-property-inclusion: non_null
+  zipkin:
+    enabled: false
+
+swagger:
+  title: DMP 2.0 - Semantic Search POC
+  description: DMP 2.0 POC
+  version: 1.0.0
+  
+endpoints:
+  enabled: true
+  sensitive: false
