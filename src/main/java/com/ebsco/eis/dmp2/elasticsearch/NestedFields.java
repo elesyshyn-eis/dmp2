@@ -25,10 +25,10 @@ public class NestedFields {
      * Value represent the 'path' to the nested field
      */
     static {
-        NESTED_FIELDS.put("section.breadcrumb", SECTIONS_PATH);
-        NESTED_FIELDS.put("section.content", SECTIONS_PATH);
-        NESTED_FIELDS.put("section.heading", SECTIONS_PATH);
-        NESTED_FIELDS.put("section.weight", SECTIONS_PATH);
+        NESTED_FIELDS.put("sections.breadcrumb", SECTIONS_PATH);
+        NESTED_FIELDS.put("sections.content", SECTIONS_PATH);
+        NESTED_FIELDS.put("sections.heading", SECTIONS_PATH);
+        NESTED_FIELDS.put("sections.weight", SECTIONS_PATH);
     }
 
     public static boolean isNestedField(final String field) {
