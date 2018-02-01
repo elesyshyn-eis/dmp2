@@ -1,7 +1,6 @@
 package com.ebsco.eis.dmp2.controller;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,8 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ebsco.eis.dmp2.elasticsearch.ElasticRestClient;
 import com.ebsco.eis.dmp2.elasticsearch.SearchRequestBuilder;
+import com.ebsco.eis.dmp2.sse.Mappings;
 import com.ebsco.eis.dmp2.sse.SemanticService;
 import com.ebsco.eis.dynamichealth.elasticsearch.ElasticResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 public class SearchController {
@@ -34,11 +35,11 @@ public class SearchController {
     public ResponseEntity<String> search(@RequestParam(value = "searchinput", required = true) String searchinput)
             throws IOException {
     	
-    	// Pass the query to SSE to get semantic concepts
-    	Map<String[], String> concepts = semanticService.getMappedConcepts(searchinput);
-    	
     	// TODO: US330317 - Update the search input to reflect the mixture of concepts & keywords
-
+    	// Pass the query to SSE to get semantic concepts
+    	// Mappings concepts = semanticService.getMappedConcepts(searchinput);
+    	// System.out.println(concepts.toString());
+    	
         // pass the search input to our search request builder
         String searchRequest = searchRequestBuilder.build(searchinput);
 
@@ -61,4 +62,18 @@ public class SearchController {
         // return the response & status to the caller
         return new ResponseEntity<>(result.getPayload(), httpStatus);
     }
+    
+    // Expose the query to concept mapping
+    @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/concepts")
+    public ResponseEntity<String> concepts(@RequestParam(value = "searchinput", required = true) String searchinput)
+            throws IOException {
+    	
+    	// Pass the query to SSE to get semantic concepts
+    	Mappings concepts = semanticService.getMappedConcepts(searchinput);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        return new ResponseEntity<>(mapper.writeValueAsString(concepts), HttpStatus.OK);
+    }
+
 }
