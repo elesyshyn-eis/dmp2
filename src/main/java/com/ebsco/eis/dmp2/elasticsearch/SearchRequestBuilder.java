@@ -1,21 +1,14 @@
 package com.ebsco.eis.dmp2.elasticsearch;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.ArrayUtils;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,15 +16,13 @@ public class SearchRequestBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchRequestBuilder.class);
 
-
-    private static QueryFactory queryFactory = new QueryFactory();
+    @Autowired
+    private QueryFactory queryFactory;
 
     //a method to build a search request to send to ES
-    public static String build(String criteria) {
+    public String build(String criteria) {
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        
-        //TODO add inner_hits
         
         //create a match query
         QueryBuilder matchQuery = queryFactory.getMatchQuery("sections.content", criteria, true);
@@ -45,11 +36,11 @@ public class SearchRequestBuilder {
         //wrap the bool in a query
         searchSourceBuilder.query(bool);
         
-
+        // TODO: Add inner_hits & highlighting
+        
         // convert the query into a json string that elasticsearch knows how to process
         String searchRequest = searchSourceToString(searchSourceBuilder);
-
-        // LOGGER.debug(searchRequest);
+        LOGGER.debug(searchRequest);
 
         // Return the json string to the caller
         return searchRequest;

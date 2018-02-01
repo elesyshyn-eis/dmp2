@@ -8,7 +8,9 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.springframework.stereotype.Component;
 
+@Component
 public class QueryFactory {
 
     /**

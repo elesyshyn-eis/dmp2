@@ -16,10 +16,11 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder.RequestConfigCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import com.ebsco.eis.dynamichealth.elasticsearch.ElasticResult;
 
-
+@Component
 public class ElasticRestClient implements AutoCloseable {
 
     private String elasticSearchEndpoint = "search-esmedloada-medicaldiscover-d-hni6gso7xwouu4breodpdppfdu.us-east-1.es.amazonaws.com";
