@@ -7,7 +7,7 @@ buildscript {
 		springBootVersion = '1.5.2.RELEASE'
 		gradleDockerPluginVersion = '3.0.7'
 		jfrogBuildInfoPluginVersion = '4.4.12'
-		elasticVersion 			= '5.2.2'
+		elasticVersion 			= '5.1.1'
 		awsSDKVersion = '1.11.109'
 		sonarGradlePluginVersion = '2.5'
 	}

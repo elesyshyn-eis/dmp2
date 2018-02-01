@@ -4,10 +4,13 @@ import java.util.Collection;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -49,6 +52,27 @@ public class QueryFactory {
             matchQuery.fuzzyTranspositions(false);
         }
         return matchQuery;
+    }
+    
+
+    public NestedQueryBuilder getNestedMatchQuery(String field, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
+        
+    	// Build the match query
+    	MatchQueryBuilder query = QueryBuilders.matchQuery(field, criteria);
+    	
+    	// Wrap the match query as nested
+        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(field), query, scoringMode);
+        
+        // Create the highlight builder
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        for(String fieldToHighlight : fieldsToHighlight) {
+        	highlightBuilder.field(fieldToHighlight);
+        }
+        
+        // Attach the highlight builder to the nested query builder
+        nestedQueryBuilder.innerHit(new InnerHitBuilder().setHighlightBuilder(highlightBuilder));
+        
+        return nestedQueryBuilder;
     }
 
     /**
