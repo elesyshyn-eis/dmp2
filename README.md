@@ -1,5 +1,5 @@
 
-# DMP 2.0 search POC (Proof of Concept) project
+# DMP 2.0 search POC (Proof of Concept)
 
 Steps to run:
 
