@@ -81,25 +81,6 @@ public class ElasticRestClient implements AutoCloseable {
             Collections.emptyMap(),
             payload, headers);
     }
-  
-    
-  
-    // TODO  (see DHDP - SearchRequestBuilder, DHDP - QueryFactory)
-    /* 1. Need a method here to build the search request (output is a string)
-    	 A. See public QueryBuilder getMatchQuery(String field, Object criteria, Float boost, boolean allowFuzziness) method
-    	    This method builds the match clause for you. Remember that it checks if the field is nested or not. Your field IS nested
-    	    So make sure code knows it is nested.
-    	 B. Attach this match query to a bool query (in the should clause)
-    	 
-    	 	EXAMPLE:
-    	 	        
-        	QueryBuilder matchQuery = queryFactory.getMatchQuery("sections.content", "mycriteria", false);
-        	BoolQueryBuilder booleanQuery = queryFactory.getBooleanQuery();
-        	booleanQuery.should(matchQuery);
-    
-       	2. Need a method here that can perform a search (send the string to ES)
-     	
-     */
 
     protected HttpHost getElasticHost() {
         if (elasticHost == null) {
