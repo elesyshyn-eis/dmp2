@@ -23,9 +23,9 @@ import com.ebsco.eis.dynamichealth.elasticsearch.ElasticResult;
 @Component
 public class ElasticRestClient implements AutoCloseable {
 
-    private String elasticSearchEndpoint = "search-esmedloada-medicaldiscover-d-hni6gso7xwouu4breodpdppfdu.us-east-1.es.amazonaws.com";
-    private String elasticSearchClusterName = "872344130825:eis-devqa-discovery-shared";
-    private int elasticSearchClusterPort = 80;
+	private String elasticSearchEndpoint = "search-esmedloada-medicaldiscover-d-hni6gso7xwouu4breodpdppfdu.us-east-1.es.amazonaws.com";
+	private String elasticSearchClusterName = "872344130825:eis-devqa-discovery-shared";
+	private int elasticSearchClusterPort = 80;
     private int connectionRequestTimeout = 1000;
     private int connectTimeout = 1000;
     private int socketTimeout = 1000;

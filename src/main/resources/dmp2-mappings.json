@@ -2,13 +2,22 @@
 {
   "dmp2": {
     "properties": {
+      "title": {
+        "type": "text"
+      },
+      "filename": {
+        "type": "text"
+      },
+      "type": {
+        "type": "keyword"
+      },
       "sections": {
         "type": "nested",
         "properties": {
-          "heading": {
+          "anchor": {
             "type": "text"
           },
-	    "breadcrumb": {
+	     "location": {
             "type": "text"
           },  
           "content": {
@@ -16,7 +25,7 @@
             "term_vector": "with_positions_offsets"
           },
           "weight": {
-            "type": "integer"
+            "type": "double"
           }                         
         }
       }    

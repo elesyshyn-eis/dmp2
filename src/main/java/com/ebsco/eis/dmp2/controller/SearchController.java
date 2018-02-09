@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ebsco.eis.dmp2.content.loader.Dmp2Loader;
 import com.ebsco.eis.dmp2.elasticsearch.ElasticRestClient;
 import com.ebsco.eis.dmp2.elasticsearch.SearchRequestBuilder;
-import com.ebsco.eis.dmp2.sse.Mappings;
 import com.ebsco.eis.dmp2.sse.SemanticService;
+import com.ebsco.eis.dmp2.sse.pojo.Mappings;
 import com.ebsco.eis.dynamichealth.elasticsearch.ElasticResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +30,9 @@ public class SearchController {
     
     @Autowired
     private SemanticService semanticService;
+    
+    @Autowired
+    private Dmp2Loader dmp2Loader;
 
     // expose a search input field in our rest client
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/search")
@@ -74,6 +78,15 @@ public class SearchController {
         ObjectMapper mapper = new ObjectMapper();
 
         return new ResponseEntity<>(mapper.writeValueAsString(concepts), HttpStatus.OK);
+    }
+    
+    // Expose the ability to load content into the sample index
+    @RequestMapping(method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE, path = "/load")
+    public ResponseEntity<String> load(@RequestParam(value = "indexName", required = true) String indexName, @RequestParam(value = "rollup", required = true) boolean rollup) throws IOException {
+    	
+    	int recordsLoaded = dmp2Loader.loadData(indexName, rollup);
+    	
+        return new ResponseEntity<>("{\"Records Loaded\":" + recordsLoaded + "}", HttpStatus.OK);
     }
 
 }

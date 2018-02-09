@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.ebsco.eis.dmp2.sse.pojo.Mappings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component

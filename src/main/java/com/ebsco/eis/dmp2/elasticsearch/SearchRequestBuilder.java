@@ -38,7 +38,8 @@ public class SearchRequestBuilder {
         
         // wrap the bool in a query
         searchSourceBuilder.query(bool);
-        searchSourceBuilder.fetchSource(false);
+        //searchSourceBuilder.fetchSource(false);
+        searchSourceBuilder.fetchSource("title", null);
                 
         // convert the query into a json string that elasticsearch knows how to process
         String searchRequest = searchSourceToString(searchSourceBuilder);

@@ -1,5 +1,5 @@
 
-package com.ebsco.eis.dmp2.sse;
+package com.ebsco.eis.dmp2.sse.pojo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
