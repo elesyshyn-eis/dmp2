@@ -36,22 +36,37 @@ public class SearchController {
 
     // expose a search input field in our rest client
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/search")
-    public ResponseEntity<String> search(@RequestParam(value = "searchinput", required = true) String searchinput)
+    public ResponseEntity<String> search(@RequestParam(value = "q", required = true) String searchinput, @RequestParam(value = "enableQi", required = false) boolean enableQi)
             throws IOException {
     	
-    	// TODO: US330317 - Update the search input to reflect the mixture of concepts & keywords
-    	// Pass the query to SSE to get semantic concepts
-    	// Mappings concepts = semanticService.getMappedConcepts(searchinput);
-    	// System.out.println(concepts.toString());
+    	// Enrich the query
+    	String enrichedSearch = null;
+    	if (enableQi) {
+    		enrichedSearch = semanticService.getQIRecommendations(searchinput);
+    	} else {
+    		enrichedSearch = semanticService.enrichQuery(searchinput);
+    	}
+    	// Build the search request
+    	String searchRequest = searchRequestBuilder.build(searchinput, enrichedSearch);
     	
-        // pass the search input to our search request builder
-        String searchRequest = searchRequestBuilder.build(searchinput);
-
         // pass the search request to the ES client
         ElasticResult result = esClient.executeRequest("GET", "/dmp2/_search", searchRequest);
-
+        
+        StringBuilder response = new StringBuilder();
+        response.append("{ \"original query\": ");
+        response.append("\"");
+        response.append(searchinput);
+        response.append("\",\"enriched query\": ");
+        response.append("\"");
+        response.append(enrichedSearch);
+        response.append("\",\"response\":");
+        response.append(result.getPayload());
+        response.append("}");
+        
+        System.out.println(response.toString());
+      
         // return the response & status to the caller
-        return new ResponseEntity<>(result.getPayload(), HttpStatus.OK);
+        return new ResponseEntity<>(response.toString(), HttpStatus.OK);
     }
 
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/mapping")
@@ -69,7 +84,7 @@ public class SearchController {
     
     // Expose the query to concept mapping
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/concepts")
-    public ResponseEntity<String> concepts(@RequestParam(value = "searchinput", required = true) String searchinput)
+    public ResponseEntity<String> concepts(@RequestParam(value = "concepts", required = true) String searchinput)
             throws IOException {
     	
     	// Pass the query to SSE to get semantic concepts

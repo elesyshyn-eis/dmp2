@@ -36,7 +36,7 @@ echo
 echo
 echo "Creating new DH index: ${DH_NEW_INDEX}.."
 echo
-curl -s -XPUT "${DH_INDEX_URL}?pretty" -d @${JSON_DIRECTORY}dmp2-settings.json
+curl -s -XPUT "${DH_INDEX_URL}?pretty" -d @${JSON_DIRECTORY}dmp2-settings-v2.json
 if [ $? -ne 0 ]; then
   echo "Error when creating new index" 1>&2
   exit $?

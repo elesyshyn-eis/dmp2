@@ -31,12 +31,12 @@ public class Mapping implements Serializable
     @JsonProperty("tbId")
     private String tbId;
     @JsonProperty("tbKeys")
-    private List<Integer> tbKeys = new ArrayList<Integer>();
+    private List<String> tbKeys = new ArrayList<String>();
     @JsonProperty("concepts")
     private List<Concept> concepts = new ArrayList<Concept>();
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-    private final static long serialVersionUID = -9172764116943589610L;
+    private final static long serialVersionUID = -917276411694358969L;
 
     /**
      * No args constructor for use in serialization
@@ -52,7 +52,7 @@ public class Mapping implements Serializable
      * @param tokens
      * @param concepts
      */
-    public Mapping(List<String> tokens, String tbId, List<Integer> tbKeys, List<Concept> concepts) {
+    public Mapping(List<String> tokens, String tbId, List<String> tbKeys, List<Concept> concepts) {
         super();
         this.tokens = tokens;
         this.tbId = tbId;
@@ -91,16 +91,16 @@ public class Mapping implements Serializable
     }
 
     @JsonProperty("tbKeys")
-    public List<Integer> getTbKeys() {
+    public List<String> getTbKeys() {
         return tbKeys;
     }
 
     @JsonProperty("tbKeys")
-    public void setTbKeys(List<Integer> tbKeys) {
+    public void setTbKeys(List<String> tbKeys) {
         this.tbKeys = tbKeys;
     }
 
-    public Mapping withTbKeys(List<Integer> tbKeys) {
+    public Mapping withTbKeys(List<String> tbKeys) {
         this.tbKeys = tbKeys;
         return this;
     }

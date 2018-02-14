@@ -4,14 +4,19 @@ import java.util.Collection;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FieldValueFactorFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public class QueryFactory {
@@ -25,7 +30,7 @@ public class QueryFactory {
      * @return QueryBuilder
      */
     public QueryBuilder getMatchQuery(String field, Object criteria, boolean allowFuzziness) {
-        return getMatchQuery(field, criteria, null, allowFuzziness);
+        return getMatchQuery(field, criteria, null, allowFuzziness, null);
     }
 
     /**
@@ -37,7 +42,7 @@ public class QueryFactory {
      * @param allowFuzziness Whether to allow fuzziness
      * @return QueryBuilder
      */
-    public QueryBuilder getMatchQuery(String field, Object criteria, Float boost, boolean allowFuzziness) {
+    public QueryBuilder getMatchQuery(String field, Object criteria, Float boost, boolean allowFuzziness, String minShouldMatch) {
         MatchQueryBuilder matchQuery = QueryBuilders.matchQuery(field, criteria);
 
         if (boost != null) {
@@ -51,17 +56,27 @@ public class QueryFactory {
         if (!allowFuzziness) {
             matchQuery.fuzzyTranspositions(false);
         }
+        if(minShouldMatch != null) {
+        	matchQuery.minimumShouldMatch(minShouldMatch);
+        }
         return matchQuery;
     }
     
 
-    public NestedQueryBuilder getNestedMatchQuery(String field, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
+    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
         
     	// Build the match query
-    	MatchQueryBuilder query = QueryBuilders.matchQuery(field, criteria);
+    	MatchQueryBuilder query = QueryBuilders.matchQuery(searchField, criteria);
+    	
+        // Define the ranking criteria
+        FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders
+            .fieldValueFactorFunction(boostField).factor(boostFactor); // TODO: pass these as variables
+
+        // Combine the matching & ranking criteria
+        QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(query, scoreFunction);
     	
     	// Wrap the match query as nested
-        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(field), query, scoringMode);
+        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), functionQuery, scoringMode);
         
         // Create the highlight builder
         HighlightBuilder highlightBuilder = new HighlightBuilder();
@@ -73,6 +88,29 @@ public class QueryFactory {
         nestedQueryBuilder.innerHit(new InnerHitBuilder().setHighlightBuilder(highlightBuilder));
         
         return nestedQueryBuilder;
+    }
+    
+    public QueryBuilder getPhraseQuery(String field, String criteria, int boost, int slop) {
+    	
+    	MatchPhraseQueryBuilder phraseQuery = QueryBuilders.matchPhraseQuery(field, criteria);
+    	phraseQuery.boost(boost);
+    	phraseQuery.slop(slop);
+    	
+    	return phraseQuery;
+    }
+    
+    
+    public QueryBuilder getDisMaxQuery(float boost, float tieBreaker, QueryBuilder... queries) {
+    	
+    	DisMaxQueryBuilder disMaxQuery = QueryBuilders.disMaxQuery();
+    	
+    	for (QueryBuilder query : queries) {
+    		disMaxQuery.add(query);
+    	}
+    	disMaxQuery.boost(boost);
+    	disMaxQuery.tieBreaker(tieBreaker);
+    	
+    	return disMaxQuery;
     }
 
     /**

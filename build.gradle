@@ -146,6 +146,9 @@ dependencies {
 	compile group: 'org.elasticsearch.client', name: 'rest', version: "${project.ext['elasticVersion']}", transitive: true
 	compile group: 'org.elasticsearch.client', name: 'sniffer', version: "${project.ext['elasticVersion']}", transitive: true
 	compile group: 'org.elasticsearch', name: 'elasticsearch', version: "${project.ext['elasticVersion']}", transitive: true
+	
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
+	compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 
 	// compile('io.searchbox:jest:2.0.0')
 

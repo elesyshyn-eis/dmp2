@@ -5,6 +5,18 @@
       "title": {
         "type": "text"
       },
+      "titleConcepts": {
+        "type": "text",
+        "analyzer": "Dmp2Analyzer"
+      },
+      "titleSurfaceForms": {
+        "type": "text",
+        "fields": {
+			"keyword": {
+			"type": "keyword"
+			}
+		}
+      },
       "filename": {
         "type": "text"
       },
@@ -22,6 +34,7 @@
           },  
           "content": {
             "type": "text",
+			"analyzer": "Dmp2Analyzer",
             "term_vector": "with_positions_offsets"
           },
           "weight": {

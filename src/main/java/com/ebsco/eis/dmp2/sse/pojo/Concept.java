@@ -27,13 +27,13 @@ public class Concept implements Serializable
 {
 
     @JsonProperty("cid")
-    private Integer cid;
+    private String cid;
     @JsonProperty("name")
     private String name;
     @JsonProperty("surfaceForms")
     private List<String> surfaceForms = new ArrayList<String>();
     @JsonProperty("hypernyms")
-    private List<Integer> hypernyms = new ArrayList<Integer>();
+    private List<String> hypernyms = new ArrayList<String>();
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
     private final static long serialVersionUID = -4651274768547231622L;
@@ -52,7 +52,7 @@ public class Concept implements Serializable
      * @param cid
      * @param surfaceForms
      */
-    public Concept(Integer cid, String name, List<String> surfaceForms, List<Integer> hypernyms) {
+    public Concept(String cid, String name, List<String> surfaceForms, List<String> hypernyms) {
         super();
         this.cid = cid;
         this.name = name;
@@ -61,16 +61,16 @@ public class Concept implements Serializable
     }
 
     @JsonProperty("cid")
-    public Integer getCid() {
+    public String getCid() {
         return cid;
     }
 
     @JsonProperty("cid")
-    public void setCid(Integer cid) {
+    public void setCid(String cid) {
         this.cid = cid;
     }
 
-    public Concept withCid(Integer cid) {
+    public Concept withCid(String cid) {
         this.cid = cid;
         return this;
     }
@@ -106,16 +106,16 @@ public class Concept implements Serializable
     }
 
     @JsonProperty("hypernyms")
-    public List<Integer> getHypernyms() {
+    public List<String> getHypernyms() {
         return hypernyms;
     }
 
     @JsonProperty("hypernyms")
-    public void setHypernyms(List<Integer> hypernyms) {
+    public void setHypernyms(List<String> hypernyms) {
         this.hypernyms = hypernyms;
     }
 
-    public Concept withHypernyms(List<Integer> hypernyms) {
+    public Concept withHypernyms(List<String> hypernyms) {
         this.hypernyms = hypernyms;
         return this;
     }

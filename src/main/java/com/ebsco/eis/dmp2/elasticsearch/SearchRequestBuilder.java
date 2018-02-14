@@ -23,27 +23,41 @@ public class SearchRequestBuilder {
     private QueryFactory queryFactory;
 
     // Builds the query from the incoming criteria
-    public String build(String criteria) {
+    public String build(String criteria, String semanticCriteria) {
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         
-        // create a match query
-        QueryBuilder matchQuery = queryFactory.getNestedMatchQuery("sections.content", criteria, ScoreMode.Max, fieldsToHighlight);
+        ///////////// Create the criteria for the title fields /////////////////
+        
+        // #1. Build a match query against the title concepts field
+        QueryBuilder titleConceptQuery = queryFactory.getMatchQuery("titleConcepts", semanticCriteria, 1f, false, "75%");
+        
+        // #2. Build a match query against the title surface forms field
+        QueryBuilder titleSurfaceFormsQuery = queryFactory.getMatchQuery("titleSurfaceForms", criteria, 1f, false, "100%");
+        
+        // #3. Build a match query against the title field
+        QueryBuilder titleQuery = queryFactory.getPhraseQuery("title", criteria, 1, 3);
+        
+        // Add all the queries to a dis-max query. This will pick the best match out of the three queries
+        QueryBuilder disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
+        
+        ///////////// Create the criteria for the section fields /////////////////
+        QueryBuilder matchSectionsQuery = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.01f, semanticCriteria, ScoreMode.Max, fieldsToHighlight);
+        
      
-        // create a bool query
+        ///////////// Combine the title and section queries together /////////////////
         BoolQueryBuilder bool = queryFactory.getBooleanQuery();
-        
-        // add the match query to the bool query
-        bool.should(matchQuery);
-        
-        // wrap the bool in a query
+        bool.should(disMaxTitleQueries);
+        bool.should(matchSectionsQuery);
         searchSourceBuilder.query(bool);
-        //searchSourceBuilder.fetchSource(false);
-        searchSourceBuilder.fetchSource("title", null);
-                
+        
+        // Indicate which fields to return
+        String[] fieldsToReturn = new String[]{"title", "titleConcepts", "titleSurfaceForms"};
+        searchSourceBuilder.fetchSource(fieldsToReturn, null);
+
         // convert the query into a json string that elasticsearch knows how to process
         String searchRequest = searchSourceToString(searchSourceBuilder);
-        LOGGER.debug(searchRequest);
+        LOGGER.info(searchRequest);
 
         // Return the json string to the caller
         return searchRequest;

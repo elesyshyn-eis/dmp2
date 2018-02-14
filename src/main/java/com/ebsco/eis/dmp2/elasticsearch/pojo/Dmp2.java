@@ -18,6 +18,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
     "filename",
     "title",
+    "titleConcepts",
+    "titleSurfaceForms",
     "type",
     "sections"
 })
@@ -32,6 +34,10 @@ public class Dmp2 implements Serializable
     private String filename;
     @JsonProperty("title")
     private String title;
+    @JsonProperty("titleConcepts")
+    private String titleConcepts;
+    @JsonProperty("titleSurfaceForms")
+    private List<String> titleSurfaceForms;
     @JsonProperty("type")
     private String type;
     @JsonProperty("sections")
@@ -59,6 +65,26 @@ public class Dmp2 implements Serializable
 		this.title = title;
 	}
     
+    @JsonProperty("titleConcepts")
+	public String getTitleConcepts() {
+		return titleConcepts;
+	}
+    
+    @JsonProperty("titleConcepts")
+	public void setTitleConcepts(String titleConcepts) {
+		this.titleConcepts = titleConcepts;
+	}
+    
+    @JsonProperty("titleSurfaceForms")
+	public List<String> getTitleSurfaceForms() {
+		return titleSurfaceForms;
+	}
+    
+    @JsonProperty("titleSurfaceForms")
+	public void setTitleSurfaceForms(List<String> titleSurfaceForms) {
+		this.titleSurfaceForms = titleSurfaceForms;
+	}
+
     @JsonProperty("type")
 	public String getType() {
 		return type;
@@ -92,13 +118,14 @@ public class Dmp2 implements Serializable
 	public void setAdditionalProperties(Map<String, Object> additionalProperties) {
 		this.additionalProperties = additionalProperties;
 	}
-    
+
 	@Override
 	public String toString() {
-		return "Dmp2 [filename=" + filename + ", title=" + title + ", type=" + type + ", sections=" + sections
+		return "Dmp2 [filename=" + filename + ", title=" + title + ", titleConcepts=" + titleConcepts
+				+ ", titleSurfaceForms=" + titleSurfaceForms + ", type=" + type + ", sections=" + sections
 				+ ", additionalProperties=" + additionalProperties + "]";
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -107,10 +134,12 @@ public class Dmp2 implements Serializable
 		result = prime * result + ((filename == null) ? 0 : filename.hashCode());
 		result = prime * result + ((sections == null) ? 0 : sections.hashCode());
 		result = prime * result + ((title == null) ? 0 : title.hashCode());
+		result = prime * result + ((titleConcepts == null) ? 0 : titleConcepts.hashCode());
+		result = prime * result + ((titleSurfaceForms == null) ? 0 : titleSurfaceForms.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -139,6 +168,16 @@ public class Dmp2 implements Serializable
 			if (other.title != null)
 				return false;
 		} else if (!title.equals(other.title))
+			return false;
+		if (titleConcepts == null) {
+			if (other.titleConcepts != null)
+				return false;
+		} else if (!titleConcepts.equals(other.titleConcepts))
+			return false;
+		if (titleSurfaceForms == null) {
+			if (other.titleSurfaceForms != null)
+				return false;
+		} else if (!titleSurfaceForms.equals(other.titleSurfaceForms))
 			return false;
 		if (type == null) {
 			if (other.type != null)

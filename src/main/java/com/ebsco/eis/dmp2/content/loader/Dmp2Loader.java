@@ -18,10 +18,14 @@ import com.ebsco.eis.dmp2.content.pojo.DocumentRoot;
 import com.ebsco.eis.dmp2.elasticsearch.ElasticRestClient;
 import com.ebsco.eis.dmp2.elasticsearch.pojo.Dmp2;
 import com.ebsco.eis.dmp2.elasticsearch.pojo.Section;
+import com.ebsco.eis.dmp2.sse.SemanticService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class Dmp2Loader {
+	
+    @Autowired
+    private SemanticService semanticService;
 	
     @Autowired
     private ElasticRestClient esClient;
@@ -57,6 +61,8 @@ public class Dmp2Loader {
 				Dmp2 document = new Dmp2();
 				document.setFilename(abody.getFilename());
 				document.setTitle(abody.getTitle());
+				document.setTitleConcepts(semanticService.enrichContent(abody.getTitle()));
+				document.setTitleSurfaceForms(semanticService.getSurfaceForms(abody.getTitle()));
 				document.setType(abody.getType());
 				
 				// Create a map to hold the section content
@@ -81,6 +87,7 @@ public class Dmp2Loader {
 				// Insert the document into elasticsearch
 				esClient.executeRequest("PUT", "/" + indexName + "/dmp2/" + document.getFilename(), mapper.writeValueAsString(document));
 				count++;
+				//Thread.sleep(1000);
 				
 				
 			} catch (Exception ex) {
