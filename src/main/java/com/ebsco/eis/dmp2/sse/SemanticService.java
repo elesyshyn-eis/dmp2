@@ -23,30 +23,36 @@ public class SemanticService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(SemanticService.class);
 	private static String restEndpoint = "http://semsearch4101.epnet.com:9080/sse/rest/map?extended=true&q=";
 	
-	public Mappings getMappedConcepts(String query) {
+	public Mappings getMappedConcepts(String query, boolean includeSearchVectors) {
 		
 		 // Create a new RestTemplate instance
-        RestTemplate restTemplate = new RestTemplate();
-        
-        // Add the query parameters
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("q", query);
-        
-        // Execute the request
-        String result = restTemplate.getForObject(restEndpoint + "{q}", String.class, vars);
-        
-        LOGGER.info(result);
-        
-        ObjectMapper mapper = new ObjectMapper();
-        Mappings mappedConcepts = null;
-        
-        try {
-        	mappedConcepts = mapper.readValue(result, Mappings.class);
-        } catch (Exception oops) {
-        	LOGGER.error("Unable to map response from SSE" + oops);
-        }
-        
+       RestTemplate restTemplate = new RestTemplate();
+       
+       // Add the query parameters
+       Map<String, String> vars = new HashMap<String, String>();
+       vars.put("q", query);
+       vars.put("sv", "true");
+
+       // Execute the request
+       String result = restTemplate.getForObject(restEndpoint + "{q}&sv={sv}", String.class, vars);
+       
+       LOGGER.info(result);
+       
+       ObjectMapper mapper = new ObjectMapper();
+       Mappings mappedConcepts = null;
+       
+       try {
+       	mappedConcepts = mapper.readValue(result, Mappings.class);
+       } catch (Exception oops) {
+       	LOGGER.error("Unable to map response from SSE" + oops);
+       }
+       
 		return mappedConcepts;
+	}
+	
+	public Mappings getMappedConcepts(String query) {
+        
+		return getMappedConcepts(query, false);
 	}
 	
 	
@@ -54,7 +60,9 @@ public class SemanticService {
 		
 		StringBuilder enrichedquery = new StringBuilder();
 		
-		for(Mapping mapping : getMappedConcepts(originalContent).getMappings()) {
+		Mappings mappings = getMappedConcepts(originalContent);
+		
+		for(Mapping mapping : mappings.getMappings()) {
 			
 			// If the mapping doesn't contain any concept ids... 
 			if(mapping.getConcepts().isEmpty() && !mapping.getTokens().isEmpty()) {
@@ -72,6 +80,54 @@ public class SemanticService {
 		}
 
 		return enrichedquery.toString().trim();
+	}
+	
+	public Map<String,Float> getSearchVectors(String originalContent) {
+		
+		String targetCid = ""; 
+		Map<String,Float> decayVectors = new HashMap<String,Float>();
+		
+		Mappings mappings = getMappedConcepts(originalContent, true);
+		
+		for(Mapping mapping : mappings.getMappings()) {
+			for(Concept concept : mapping.getConcepts()) {
+				
+				if (concept.getName().contains("(product)")) {
+					targetCid = concept.getCid();
+					break;
+				}
+			}
+		}
+		
+		if (targetCid.trim().isEmpty()) {
+			return decayVectors;
+		}
+		
+		String mappedConcepts = mappings.getSearchVector();
+		mappedConcepts = mappedConcepts.replaceAll("\\[", " ");
+		mappedConcepts = mappedConcepts.replaceAll("\\]", " ");
+		
+		
+		for (String substring : mappedConcepts.split("\\(*\\)")) {
+			
+			if (substring.contains(targetCid)) {
+				substring = substring.replaceAll("\\)", " ");
+				substring = substring.replaceAll("\\(", " ");
+				
+				for(String vector : substring.split(",")) {
+					String[] vectors = vector.split("/");
+					
+					if (vectors.length == 2){
+						String concept = vectors[0];
+						Float weight = Float.valueOf(vectors[1]);
+						decayVectors.put(concept.trim(), weight);
+					}
+				}
+				break;
+			}
+		}
+		
+		return decayVectors;
 	}
 	
 	public String enrichContent(String originalContent) {
@@ -162,6 +218,8 @@ public class SemanticService {
 			String query = permutation.toString().trim();
 			String concepts = enrichQuery(query).trim();
 			int count = concepts.split(" ").length;
+			
+			System.out.println(query + "," + concepts);
 			
 			// If we have less concepts than our original recommendation...
 			if (count < numOfConcepts) {

@@ -3,18 +3,11 @@ package com.ebsco.eis.dmp2.sse.pojo;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
@@ -22,7 +15,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "processingTime",
     "version",
     "isComplete",
-    "mappings"
+    "mappings",
+    "searchVector"
 })
 public class Mappings implements Serializable
 {
@@ -37,32 +31,21 @@ public class Mappings implements Serializable
     private Boolean isComplete;
     @JsonProperty("mappings")
     private List<Mapping> mappings = new ArrayList<Mapping>();
-    @JsonIgnore
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    @JsonProperty("searchVector")
+    private String searchVector;
     private final static long serialVersionUID = 7948451533369056038L;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
     public Mappings() {
     }
 
-    /**
-     * 
-     * @param isComplete
-     * @param mappings
-     * @param processingTime
-     * @param type
-     * @param version
-     */
-    public Mappings(String type, Integer processingTime, Integer version, Boolean isComplete, List<Mapping> mappings) {
+    public Mappings(String type, Integer processingTime, Integer version, Boolean isComplete, List<Mapping> mappings, String searchVector) {
         super();
         this.type = type;
         this.processingTime = processingTime;
         this.version = version;
         this.isComplete = isComplete;
         this.mappings = mappings;
+        this.searchVector = searchVector;
     }
 
     @JsonProperty("type")
@@ -140,41 +123,74 @@ public class Mappings implements Serializable
         return this;
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
+    @JsonProperty("searchVector")
+    public String getSearchVector() {
+        return searchVector;
     }
 
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
+    @JsonProperty("searchVector")
+    public void setSearchVector(String searchVector) {
+        this.searchVector = searchVector;
     }
 
-    public Mappings withAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
-        return this;
-    }
+	@Override
+	public String toString() {
+		return "Mappings [type=" + type + ", processingTime=" + processingTime + ", version=" + version
+				+ ", isComplete=" + isComplete + ", mappings=" + mappings + ", searchVector=" + searchVector + "]";
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("processingTime", processingTime).append("version", version).append("isComplete", isComplete).append("mappings", mappings).append("additionalProperties", additionalProperties).toString();
-    }
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((isComplete == null) ? 0 : isComplete.hashCode());
+		result = prime * result + ((mappings == null) ? 0 : mappings.hashCode());
+		result = prime * result + ((processingTime == null) ? 0 : processingTime.hashCode());
+		result = prime * result + ((searchVector == null) ? 0 : searchVector.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		return result;
+	}
 
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder().append(isComplete).append(additionalProperties).append(mappings).append(processingTime).append(type).append(version).toHashCode();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-        if ((other instanceof Mappings) == false) {
-            return false;
-        }
-        Mappings rhs = ((Mappings) other);
-        return new EqualsBuilder().append(isComplete, rhs.isComplete).append(additionalProperties, rhs.additionalProperties).append(mappings, rhs.mappings).append(processingTime, rhs.processingTime).append(type, rhs.type).append(version, rhs.version).isEquals();
-    }
-
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Mappings other = (Mappings) obj;
+		if (isComplete == null) {
+			if (other.isComplete != null)
+				return false;
+		} else if (!isComplete.equals(other.isComplete))
+			return false;
+		if (mappings == null) {
+			if (other.mappings != null)
+				return false;
+		} else if (!mappings.equals(other.mappings))
+			return false;
+		if (processingTime == null) {
+			if (other.processingTime != null)
+				return false;
+		} else if (!processingTime.equals(other.processingTime))
+			return false;
+		if (searchVector == null) {
+			if (other.searchVector != null)
+				return false;
+		} else if (!searchVector.equals(other.searchVector))
+			return false;
+		if (type == null) {
+			if (other.type != null)
+				return false;
+		} else if (!type.equals(other.type))
+			return false;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
+		return true;
+	}
 }

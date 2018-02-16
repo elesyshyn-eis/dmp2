@@ -1,6 +1,8 @@
 package com.ebsco.eis.dmp2.controller;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,14 +42,17 @@ public class SearchController {
             throws IOException {
     	
     	// Enrich the query
+    	Map<String,Float> decayVectors = new HashMap<>();
     	String enrichedSearch = null;
     	if (enableQi) {
     		enrichedSearch = semanticService.getQIRecommendations(searchinput);
+    		decayVectors = semanticService.getSearchVectors(searchinput);
     	} else {
     		enrichedSearch = semanticService.enrichQuery(searchinput);
     	}
+    	
     	// Build the search request
-    	String searchRequest = searchRequestBuilder.build(searchinput, enrichedSearch);
+    	String searchRequest = searchRequestBuilder.build(searchinput, enrichedSearch, decayVectors);
     	
         // pass the search request to the ES client
         ElasticResult result = esClient.executeRequest("GET", "/dmp2/_search", searchRequest);
@@ -59,6 +64,9 @@ public class SearchController {
         response.append("\",\"enriched query\": ");
         response.append("\"");
         response.append(enrichedSearch);
+        response.append("\",\"decayVectors\": ");
+        response.append("\"");
+        response.append(decayVectors);
         response.append("\",\"response\":");
         response.append(result.getPayload());
         response.append("}");

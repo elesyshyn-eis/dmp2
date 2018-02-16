@@ -1,5 +1,8 @@
 package com.ebsco.eis.dmp2.elasticsearch;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -23,11 +26,12 @@ public class SearchRequestBuilder {
     private QueryFactory queryFactory;
 
     // Builds the query from the incoming criteria
-    public String build(String criteria, String semanticCriteria) {
+    public String build(String criteria, String semanticCriteria, Map<String,Float> decayVectors) {
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         
         ///////////// Create the criteria for the title fields /////////////////
+        QueryBuilder disMaxTitleQueries = null;
         
         // #1. Build a match query against the title concepts field
         QueryBuilder titleConceptQuery = queryFactory.getMatchQuery("titleConcepts", semanticCriteria, 1f, false, "75%");
@@ -38,8 +42,21 @@ public class SearchRequestBuilder {
         // #3. Build a match query against the title field
         QueryBuilder titleQuery = queryFactory.getPhraseQuery("title", criteria, 1, 3);
         
-        // Add all the queries to a dis-max query. This will pick the best match out of the three queries
-        QueryBuilder disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
+        // #4: Build the decay vector search aginst the title field
+        BoolQueryBuilder decay = queryFactory.getBooleanQuery();
+        if (!decayVectors.isEmpty()) {
+        	for(Entry<String, Float> entrySet : decayVectors.entrySet()) {
+        		QueryBuilder vector = queryFactory.getMatchQuery("titleConcepts", entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
+        		decay.should(vector);        		
+        	}    
+        	
+        	// Add all the queries to a dis-max query. This will pick the best match out of the three queries
+        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery, decay);
+        }
+        else {
+        	// Add all the queries to a dis-max query. This will pick the best match out of the three queries
+        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
+        }
         
         ///////////// Create the criteria for the section fields /////////////////
         QueryBuilder matchSectionsQuery = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.01f, semanticCriteria, ScoreMode.Max, fieldsToHighlight);

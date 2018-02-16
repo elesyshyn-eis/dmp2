@@ -1,0 +1,76 @@
+{
+	"index": {
+		"number_of_replicas": 1
+	},
+	"analysis": {
+		"analyzer": {
+			"Dmp2Analyzer": {
+				"type": "custom",
+				"tokenizer": "concept_tokenizer",
+				"filter": [
+				 	"lowercase",
+				 	"trim",
+		            "EisStopwordFilter"
+		          ]
+			}
+		},
+		"tokenizer": {
+        	"concept_tokenizer": {
+          	"type": "pattern",
+          	"pattern": "(<c)|(</c>)|(>)|(,)|(\\.)|(\\s)|(/)",
+          	"group": -1
+        	}
+      	},
+		"filter": {
+			"EisStopwordFilter": {
+				"type": "stop",
+				"stopwords": [
+					"",
+					"an",
+					"and",
+					"are",
+					"as",
+					"at",
+					"be",
+					"because",
+					"been",
+					"but",
+					"by",
+					"for",
+					"however",
+					"if",
+					"in",
+					"into",
+					"is",
+					"it",
+					"not",
+					"of",
+					"on",
+					"or",
+					"so",
+					"such",
+					"that",
+					"the",
+					"their",
+					"then",
+					"there",
+					"they",
+					"this",
+					"to",
+					"was",
+					"were",
+					"whatever",
+					"whether",
+					"would"
+				]
+			},
+			"EisStemmerOverride": {
+				"type": "stemmer_override",
+				"rules": [
+					"feet=>foot",
+					"bacteria=>bacterium"
+				]
+			}
+		}
+	}
+}
