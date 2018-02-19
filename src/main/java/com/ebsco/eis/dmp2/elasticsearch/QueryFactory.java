@@ -1,6 +1,8 @@
 package com.ebsco.eis.dmp2.elasticsearch;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -49,10 +51,6 @@ public class QueryFactory {
             matchQuery.boost(boost);
         }
 
-        // If this is a nested field, then wrap query as nested
-        if (NestedFields.isNestedField(field)) {
-            return QueryBuilders.nestedQuery(NestedFields.getNestedPath(field), matchQuery, ScoreMode.Avg);
-        }
         if (!allowFuzziness) {
             matchQuery.fuzzyTranspositions(false);
         }
@@ -62,21 +60,63 @@ public class QueryFactory {
         return matchQuery;
     }
     
-
-    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
+// OLD CODE -- commented out for reference only
+//    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
+//        
+//    	// Build the match query
+//    	MatchQueryBuilder query = QueryBuilders.matchQuery(searchField, criteria);
+//    	
+//        // Define the ranking criteria
+//        FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders
+//            .fieldValueFactorFunction(boostField).factor(boostFactor); // TODO: pass these as variables
+//
+//        // Combine the matching & ranking criteria
+//        QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(query, scoreFunction);
+//    	
+//    	// Wrap the match query as nested
+//        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), functionQuery, scoringMode);
+//        
+//        // Create the highlight builder
+//        HighlightBuilder highlightBuilder = new HighlightBuilder();
+//        for(String fieldToHighlight : fieldsToHighlight) {
+//        	highlightBuilder.field(fieldToHighlight);
+//        }
+//        
+//        // Attach the highlight builder to the nested query builder
+//        nestedQueryBuilder.innerHit(new InnerHitBuilder().setHighlightBuilder(highlightBuilder));
+//        
+//        return nestedQueryBuilder;
+//    }
+    
+    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, ScoreMode scoringMode, String[] fieldsToHighlight, Map<String, Map<String,Float>> decayVectors) {
         
-    	// Build the match query
-    	MatchQueryBuilder query = QueryBuilders.matchQuery(searchField, criteria);
+    	// (c1*w1 || c2*w2) && (c3*w3) && (c4*w4 || c5*w5 || c6*w6)
+    	BoolQueryBuilder andConditionBuilder = getBooleanQuery(); // AND condition
     	
+    	// For each concept in the search vector... 
+    	for(Entry<String, Map<String, Float>> searchVector: decayVectors.entrySet()) {
+    		
+    		// OR the concepts together
+    		BoolQueryBuilder orConditionBuilder = getBooleanQuery();
+    		for(Entry<String, Float> entrySet : searchVector.getValue().entrySet()) {
+        		
+    			QueryBuilder vector = getMatchQuery(searchField, entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
+    			orConditionBuilder.should(vector);        		
+        	} 
+    		
+    		// Place the OR conditions inside the AND conditions
+    		andConditionBuilder.must(orConditionBuilder);
+    	}
+    	
+    	// TODO: ERICA -- review the impact to section weighting here
         // Define the ranking criteria
-        FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders
-            .fieldValueFactorFunction(boostField).factor(boostFactor); // TODO: pass these as variables
+       // FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders.fieldValueFactorFunction(boostField).factor(boostFactor); 
 
         // Combine the matching & ranking criteria
-        QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(query, scoreFunction);
+       // QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(andConditionBuilder, scoreFunction);
     	
     	// Wrap the match query as nested
-        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), functionQuery, scoringMode);
+        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), andConditionBuilder, scoringMode);
         
         // Create the highlight builder
         HighlightBuilder highlightBuilder = new HighlightBuilder();

@@ -33,48 +33,37 @@ public class SearchRequestBuilder {
         ///////////// Create the criteria for the title fields /////////////////
         QueryBuilder disMaxTitleQueries = null;
         
-        // #1. Build a match query against the title concepts field
-        QueryBuilder titleConceptQuery = queryFactory.getMatchQuery("titleConcepts", semanticCriteria, 1f, false, "75%");
-        
-        // #2. Build a match query against the title surface forms field
+        // #1. Build a match query against the title surface forms field
         QueryBuilder titleSurfaceFormsQuery = queryFactory.getMatchQuery("titleSurfaceForms", criteria, 1f, false, "100%");
         
-        // #3. Build a match query against the title field
+        // #2. Build a match query against the title field
         QueryBuilder titleQuery = queryFactory.getPhraseQuery("title", criteria, 1, 3);
         
-        // #4. Add all the queries to a dis-max query. 
-        if (decayVectors.isEmpty()) {
-        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
-        }
-        else {
-        	
-        	// Create the main boolean to hold several groups of decayed vectors (AND condition)
-        	BoolQueryBuilder vectorBoolean = queryFactory.getBooleanQuery();
-        	
-        	// For each decay vector...
-        	for(Entry<String, Map<String, Float>> decayVector: decayVectors.entrySet()) {
+        // #3. Build a match query against the title concepts field:
+        // (c1*w1 || c2*w2) && (c3*w3) && (c4*w4 || c5*w5 || c6*w6)
+    	BoolQueryBuilder andConditionBuilder = queryFactory.getBooleanQuery(); // AND condition
+    	
+    	// For each concept in the search vector... 
+    	for(Entry<String, Map<String, Float>> searchVector: decayVectors.entrySet()) {
+    		
+    		// OR the concepts together
+    		BoolQueryBuilder orConditionBuilder = queryFactory.getBooleanQuery();
+    		for(Entry<String, Float> entrySet : searchVector.getValue().entrySet()) {
         		
-        		BoolQueryBuilder decay = queryFactory.getBooleanQuery();
-        		for(Entry<String, Float> entrySet : decayVector.getValue().entrySet()) {
-            		
-        			// Build the match query
-        			QueryBuilder vector = queryFactory.getMatchQuery("titleConcepts", entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
-            		
-        			// And the match query (OR condition)
-        			decay.should(vector);        		
-            	} 
-        		
-        		// AND the match groups together
-        		vectorBoolean.must(decay);
-        	}
-        	
-        	// Add all the queries to a dis-max query. This will pick the best match out of the three queries
-        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery, vectorBoolean);
-        }
+    			QueryBuilder vector = queryFactory.getMatchQuery("titleConcepts", entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
+    			orConditionBuilder.should(vector);        		
+        	} 
+    		
+    		// Place the OR conditions inside the AND conditions
+    		andConditionBuilder.must(orConditionBuilder);
+    	}
+         
+    	// #4. Add all the queries to a dis-max query. This will pick the best match out of the three queries
+        disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.0f, titleSurfaceFormsQuery, titleQuery, andConditionBuilder);
         
         ///////////// Create the criteria for the section fields /////////////////
-        QueryBuilder matchSectionsQuery = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.01f, semanticCriteria, ScoreMode.Max, fieldsToHighlight);
-        
+        QueryBuilder matchSectionsQuery = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.01f, ScoreMode.Max, fieldsToHighlight, decayVectors);
+            
      
         ///////////// Combine the title and section queries together /////////////////
         BoolQueryBuilder bool = queryFactory.getBooleanQuery();

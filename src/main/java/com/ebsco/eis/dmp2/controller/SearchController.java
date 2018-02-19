@@ -38,7 +38,7 @@ public class SearchController {
 
     // expose a search input field in our rest client
     @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, path = "/search")
-    public ResponseEntity<String> search(@RequestParam(value = "q", required = true) String searchinput, @RequestParam(value = "enableQi", required = false) boolean enableQi)
+    public ResponseEntity<String> search(@RequestParam(value = "q", required = true) String searchinput, @RequestParam(value = "enableQi", required = false, defaultValue="true") boolean enableQi)
             throws IOException {
     	
     	// Enrich the query
@@ -46,7 +46,7 @@ public class SearchController {
     	String enrichedSearch = null;
     	if (enableQi) {
     		enrichedSearch = semanticService.getQIRecommendations(searchinput);
-    		decayVectors = semanticService.getSearchVectors(searchinput);
+    		decayVectors = semanticService.getSearchVectors(enrichedSearch);
     	} else {
     		enrichedSearch = semanticService.convertToConcepts(searchinput);
     	}
@@ -61,10 +61,10 @@ public class SearchController {
         response.append("{ \"originalQuery\": ");
         response.append("\"");
         response.append(searchinput);
-        response.append("\",\"concepts\": ");
+        response.append("\",\"qiRecommendation\": ");
         response.append("\"");
         response.append(enrichedSearch);
-        response.append("\",\"decayVectors\": ");
+        response.append("\",\"searchVectors\": ");
         response.append("\"");
         response.append(decayVectors);
         response.append("\",\"response\":");

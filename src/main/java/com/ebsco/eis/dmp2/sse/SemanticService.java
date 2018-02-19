@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.collections4.iterators.PermutationIterator;
@@ -81,25 +82,46 @@ public class SemanticService {
 	
 	public Map<String, Map<String,Float>> getSearchVectors(String query) {
 		
-		List<String> targetCids = new ArrayList<String>(); 
-		Map<String,Float> decayVectors = new HashMap<>();
-		Map<String, Map<String,Float>> listOfDecayVectors = new HashMap<>();
+		Map<String, Map<String,Float>> searchVectors = new HashMap<>();
+		Map<String, List<String>> decayCids = new HashMap<>(); 
 		
 		Mappings mappings = getMappedConcepts(query);
 		
+		// For each mapping... 
 		for(Mapping mapping : mappings.getMappings()) {
+			
+			// Build the mapping name... 
+			String mappingName = "";
+			for(String token : mapping.getTokens()) {
+				mappingName = mappingName.concat(token + " ");
+			}
+			mappingName = mappingName.trim();
+			
+			// Insert the mapping name into the search vectors... 
+			searchVectors.put(mappingName, new HashMap<String,Float>());
+			
+			// For each concept..
+			List<String> targetCids = new ArrayList<>();			
 			for(Concept concept : mapping.getConcepts()) {
 				
+				// If we want to expand on this concept...
 				if (concept.getName().contains("(product)")) {
-					targetCids.add(concept.getCid());
-					break;
-				}
+					
+					// Add the CID to the list of ones that we need to expand
+					targetCids.add(concept.getCid());			
+					decayCids.put(mappingName, targetCids);
+					
+				} 
+				// Add it to search vectors with a default weight of 1
+				searchVectors.get(mappingName).put(concept.getCid(), 1.0f);
 			}
 		}
 		
-		if (targetCids.isEmpty()) {
-			return listOfDecayVectors;
-		}
+		//System.out.println(searchVectors);
+		
+		//if (decayCids.isEmpty()) {
+		//	return new HashMap<>();
+		//}
 		
 		String mappedConcepts = mappings.getSearchVector();
 		mappedConcepts = mappedConcepts.replaceAll("\\[", " ");
@@ -107,26 +129,31 @@ public class SemanticService {
 		
 		for (String substring : mappedConcepts.split("\\(*\\)")) {
 			
-			for(String targetCid : targetCids){
+			for(Entry<String, List<String>> targetCids : decayCids.entrySet()) {
 				
-				if (substring.contains(targetCid)) {
-					substring = substring.replaceAll("\\)", " ");
-					substring = substring.replaceAll("\\(", " ");
-					
-					for(String vector : substring.split(",")) {
-						String[] vectors = vector.split("/");
+				for (String targetCid : targetCids.getValue()) {
+				
+					Map<String,Float> decayVectors = new HashMap<>();
+				
+					if (substring.contains(targetCid)) {
+						substring = substring.replaceAll("\\)", " ");
+						substring = substring.replaceAll("\\(", " ");
 						
-						if (vectors.length == 2){
-							String concept = vectors[0];
-							Float weight = Float.valueOf(vectors[1]);
-							decayVectors.put(concept.trim(), weight);
+						for(String vector : substring.split(",")) {
+							String[] vectors = vector.split("/");
+							
+							if (vectors.length == 2){
+								String concept = vectors[0];
+								Float weight = Float.valueOf(vectors[1]);
+								decayVectors.put(concept.trim(), weight);
+							}
 						}
+						searchVectors.get(targetCids.getKey()).putAll(decayVectors);
 					}
-					listOfDecayVectors.put(targetCid, decayVectors);
 				}
 			}
 		}
-		return listOfDecayVectors;
+		return searchVectors;
 	}
 	
 	public String enrichContent(String originalContent) {
@@ -199,8 +226,8 @@ public class SemanticService {
 	
 	public String getQIRecommendations(String originalContent) {
 		
-		String recommendation = convertToConcepts(originalContent);
-		int numOfConcepts = recommendation.split(" ").length;
+		String recommendation = originalContent;
+		int numOfConcepts = convertToConcepts(originalContent).split(" ").length;
 		
 		PermutationIterator<String> iterator = new PermutationIterator<String>(Arrays.asList(originalContent.split(" ")));
 		
@@ -222,7 +249,7 @@ public class SemanticService {
 			
 			// If we have less concepts than our original recommendation...
 			if (count < numOfConcepts) {
-				recommendation = concepts;
+				recommendation = query;
 				numOfConcepts = count;
 			}
 		}
