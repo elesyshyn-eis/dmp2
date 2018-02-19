@@ -26,7 +26,7 @@ public class SearchRequestBuilder {
     private QueryFactory queryFactory;
 
     // Builds the query from the incoming criteria
-    public String build(String criteria, String semanticCriteria, Map<String,Float> decayVectors) {
+    public String build(String criteria, String semanticCriteria, Map<String, Map<String,Float>> decayVectors) {
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         
@@ -42,20 +42,34 @@ public class SearchRequestBuilder {
         // #3. Build a match query against the title field
         QueryBuilder titleQuery = queryFactory.getPhraseQuery("title", criteria, 1, 3);
         
-        // #4: Build the decay vector search aginst the title field
-        BoolQueryBuilder decay = queryFactory.getBooleanQuery();
-        if (!decayVectors.isEmpty()) {
-        	for(Entry<String, Float> entrySet : decayVectors.entrySet()) {
-        		QueryBuilder vector = queryFactory.getMatchQuery("titleConcepts", entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
-        		decay.should(vector);        		
-        	}    
-        	
-        	// Add all the queries to a dis-max query. This will pick the best match out of the three queries
-        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery, decay);
+        // #4. Add all the queries to a dis-max query. 
+        if (decayVectors.isEmpty()) {
+        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
         }
         else {
+        	
+        	// Create the main boolean to hold several groups of decayed vectors (AND condition)
+        	BoolQueryBuilder vectorBoolean = queryFactory.getBooleanQuery();
+        	
+        	// For each decay vector...
+        	for(Entry<String, Map<String, Float>> decayVector: decayVectors.entrySet()) {
+        		
+        		BoolQueryBuilder decay = queryFactory.getBooleanQuery();
+        		for(Entry<String, Float> entrySet : decayVector.getValue().entrySet()) {
+            		
+        			// Build the match query
+        			QueryBuilder vector = queryFactory.getMatchQuery("titleConcepts", entrySet.getKey(), Float.valueOf(entrySet.getValue()), false, "100%");
+            		
+        			// And the match query (OR condition)
+        			decay.should(vector);        		
+            	} 
+        		
+        		// AND the match groups together
+        		vectorBoolean.must(decay);
+        	}
+        	
         	// Add all the queries to a dis-max query. This will pick the best match out of the three queries
-        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery);
+        	disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.01f, titleConceptQuery, titleSurfaceFormsQuery, titleQuery, vectorBoolean);
         }
         
         ///////////// Create the criteria for the section fields /////////////////

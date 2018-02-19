@@ -42,13 +42,13 @@ public class SearchController {
             throws IOException {
     	
     	// Enrich the query
-    	Map<String,Float> decayVectors = new HashMap<>();
+    	Map<String, Map<String,Float>> decayVectors = new HashMap<>();
     	String enrichedSearch = null;
     	if (enableQi) {
     		enrichedSearch = semanticService.getQIRecommendations(searchinput);
     		decayVectors = semanticService.getSearchVectors(searchinput);
     	} else {
-    		enrichedSearch = semanticService.enrichQuery(searchinput);
+    		enrichedSearch = semanticService.convertToConcepts(searchinput);
     	}
     	
     	// Build the search request
@@ -58,10 +58,10 @@ public class SearchController {
         ElasticResult result = esClient.executeRequest("GET", "/dmp2/_search", searchRequest);
         
         StringBuilder response = new StringBuilder();
-        response.append("{ \"original query\": ");
+        response.append("{ \"originalQuery\": ");
         response.append("\"");
         response.append(searchinput);
-        response.append("\",\"enriched query\": ");
+        response.append("\",\"concepts\": ");
         response.append("\"");
         response.append(enrichedSearch);
         response.append("\",\"decayVectors\": ");

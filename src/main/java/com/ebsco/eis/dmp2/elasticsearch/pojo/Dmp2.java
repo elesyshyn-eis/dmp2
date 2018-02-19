@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -37,7 +38,7 @@ public class Dmp2 implements Serializable
     @JsonProperty("titleConcepts")
     private String titleConcepts;
     @JsonProperty("titleSurfaceForms")
-    private List<String> titleSurfaceForms;
+    private Set<String> titleSurfaceForms;
     @JsonProperty("type")
     private String type;
     @JsonProperty("sections")
@@ -76,12 +77,12 @@ public class Dmp2 implements Serializable
 	}
     
     @JsonProperty("titleSurfaceForms")
-	public List<String> getTitleSurfaceForms() {
+	public Set<String> getTitleSurfaceForms() {
 		return titleSurfaceForms;
 	}
     
     @JsonProperty("titleSurfaceForms")
-	public void setTitleSurfaceForms(List<String> titleSurfaceForms) {
+	public void setTitleSurfaceForms(Set<String> titleSurfaceForms) {
 		this.titleSurfaceForms = titleSurfaceForms;
 	}
 
