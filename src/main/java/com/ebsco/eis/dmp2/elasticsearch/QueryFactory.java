@@ -60,36 +60,9 @@ public class QueryFactory {
         return matchQuery;
     }
     
-// OLD CODE -- commented out for reference only
-//    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, Object criteria, ScoreMode scoringMode, String[] fieldsToHighlight) {
-//        
-//    	// Build the match query
-//    	MatchQueryBuilder query = QueryBuilders.matchQuery(searchField, criteria);
-//    	
-//        // Define the ranking criteria
-//        FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders
-//            .fieldValueFactorFunction(boostField).factor(boostFactor); // TODO: pass these as variables
-//
-//        // Combine the matching & ranking criteria
-//        QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(query, scoreFunction);
-//    	
-//    	// Wrap the match query as nested
-//        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), functionQuery, scoringMode);
-//        
-//        // Create the highlight builder
-//        HighlightBuilder highlightBuilder = new HighlightBuilder();
-//        for(String fieldToHighlight : fieldsToHighlight) {
-//        	highlightBuilder.field(fieldToHighlight);
-//        }
-//        
-//        // Attach the highlight builder to the nested query builder
-//        nestedQueryBuilder.innerHit(new InnerHitBuilder().setHighlightBuilder(highlightBuilder));
-//        
-//        return nestedQueryBuilder;
-//    }
-    
-    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, ScoreMode scoringMode, String[] fieldsToHighlight, Map<String, Map<String,Float>> decayVectors) {
+    public NestedQueryBuilder getNestedMatchQuery(String searchField, String boostField, float boostFactor, ScoreMode scoringMode, String[] fieldsToHighlight, Object criteria, Map<String, Map<String,Float>> decayVectors) {
         
+    	// #1. Build the concepts AND / OR criteria
     	// (c1*w1 || c2*w2) && (c3*w3) && (c4*w4 || c5*w5 || c6*w6)
     	BoolQueryBuilder andConditionBuilder = getBooleanQuery(); // AND condition
     	
@@ -108,15 +81,20 @@ public class QueryFactory {
     		andConditionBuilder.must(orConditionBuilder);
     	}
     	
-    	// TODO: ERICA -- review the impact to section weighting here
+    	// #2. Build the keyword search
+    	MatchQueryBuilder keyword = QueryBuilders.matchQuery(searchField, criteria);
+    	
+    	// #3. Attach the queries to a dismax 
+    	QueryBuilder disMaxSectionQueries = getDisMaxQuery(1f, 0.0f, andConditionBuilder, keyword);
+
         // Define the ranking criteria
-       // FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders.fieldValueFactorFunction(boostField).factor(boostFactor); 
+        FieldValueFactorFunctionBuilder scoreFunction = ScoreFunctionBuilders.fieldValueFactorFunction(boostField).factor(boostFactor); 
 
         // Combine the matching & ranking criteria
-       // QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(andConditionBuilder, scoreFunction);
+        QueryBuilder functionQuery = QueryBuilders.functionScoreQuery(disMaxSectionQueries, scoreFunction);
     	
     	// Wrap the match query as nested
-        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), andConditionBuilder, scoringMode);
+        NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(NestedFields.getNestedPath(searchField), functionQuery, scoringMode);
         
         // Create the highlight builder
         HighlightBuilder highlightBuilder = new HighlightBuilder();

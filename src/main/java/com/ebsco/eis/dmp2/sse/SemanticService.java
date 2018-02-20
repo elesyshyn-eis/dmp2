@@ -101,58 +101,60 @@ public class SemanticService {
 			searchVectors.put(mappingName, new HashMap<String,Float>());
 			
 			// For each concept..
-			List<String> targetCids = new ArrayList<>();			
-			for(Concept concept : mapping.getConcepts()) {
-				
-				// If we want to expand on this concept...
-				if (concept.getName().contains("(product)")) {
+			List<String> targetCids = new ArrayList<>();	
+			
+			if (mapping.getConcepts().isEmpty()) {
+				searchVectors.get(mappingName).put(mappingName, 1.0f);
+			} else {
+				for(Concept concept : mapping.getConcepts()) {
 					
-					// Add the CID to the list of ones that we need to expand
-					targetCids.add(concept.getCid());			
-					decayCids.put(mappingName, targetCids);
-					
-				} 
-				// Add it to search vectors with a default weight of 1
-				searchVectors.get(mappingName).put(concept.getCid(), 1.0f);
+					// If we want to expand on this concept...
+					if (concept.getName().contains("(product)")) {
+						
+						// Add the CID to the list of ones that we need to expand
+						targetCids.add(concept.getCid());			
+						decayCids.put(mappingName, targetCids);
+					} 
+					// Add it to search vectors with a default weight of 1
+					searchVectors.get(mappingName).put(concept.getCid(), 1.0f);
+				}
 			}
 		}
 		
-		//System.out.println(searchVectors);
-		
-		//if (decayCids.isEmpty()) {
-		//	return new HashMap<>();
-		//}
-		
 		String mappedConcepts = mappings.getSearchVector();
-		mappedConcepts = mappedConcepts.replaceAll("\\[", " ");
-		mappedConcepts = mappedConcepts.replaceAll("\\]", " ");
 		
-		for (String substring : mappedConcepts.split("\\(*\\)")) {
+		if (mappedConcepts != null && !mappedConcepts.isEmpty()) {
+			mappedConcepts = mappedConcepts.replaceAll("\\[", " ");
+			mappedConcepts = mappedConcepts.replaceAll("\\]", " ");
 			
-			for(Entry<String, List<String>> targetCids : decayCids.entrySet()) {
+			for (String substring : mappedConcepts.split("\\(*\\)")) {
 				
-				for (String targetCid : targetCids.getValue()) {
-				
-					Map<String,Float> decayVectors = new HashMap<>();
-				
-					if (substring.contains(targetCid)) {
-						substring = substring.replaceAll("\\)", " ");
-						substring = substring.replaceAll("\\(", " ");
-						
-						for(String vector : substring.split(",")) {
-							String[] vectors = vector.split("/");
+				for(Entry<String, List<String>> targetCids : decayCids.entrySet()) {
+					
+					for (String targetCid : targetCids.getValue()) {
+					
+						Map<String,Float> decayVectors = new HashMap<>();
+					
+						if (substring.contains(targetCid)) {
+							substring = substring.replaceAll("\\)", " ");
+							substring = substring.replaceAll("\\(", " ");
 							
-							if (vectors.length == 2){
-								String concept = vectors[0];
-								Float weight = Float.valueOf(vectors[1]);
-								decayVectors.put(concept.trim(), weight);
+							for(String vector : substring.split(",")) {
+								String[] vectors = vector.split("/");
+								
+								if (vectors.length == 2){
+									String concept = vectors[0];
+									Float weight = Float.valueOf(vectors[1]);
+									decayVectors.put(concept.trim(), weight);
+								}
 							}
+							searchVectors.get(targetCids.getKey()).putAll(decayVectors);
 						}
-						searchVectors.get(targetCids.getKey()).putAll(decayVectors);
 					}
 				}
 			}
 		}
+		
 		return searchVectors;
 	}
 	

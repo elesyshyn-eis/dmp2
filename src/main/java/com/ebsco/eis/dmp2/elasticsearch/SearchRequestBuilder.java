@@ -62,13 +62,12 @@ public class SearchRequestBuilder {
         disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.0f, titleSurfaceFormsQuery, titleQuery, andConditionBuilder);
         
         ///////////// Create the criteria for the section fields /////////////////
-        QueryBuilder matchSectionsQuery = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.01f, ScoreMode.Max, fieldsToHighlight, decayVectors);
+        QueryBuilder disMaxSectionQueries = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 1f, ScoreMode.Max, fieldsToHighlight, criteria, decayVectors);
             
-     
         ///////////// Combine the title and section queries together /////////////////
         BoolQueryBuilder bool = queryFactory.getBooleanQuery();
         bool.should(disMaxTitleQueries);
-        bool.should(matchSectionsQuery);
+        bool.should(disMaxSectionQueries);
         searchSourceBuilder.query(bool);
         
         // Indicate which fields to return
