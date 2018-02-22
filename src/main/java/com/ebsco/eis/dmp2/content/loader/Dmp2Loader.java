@@ -53,7 +53,7 @@ public class Dmp2Loader {
 				Abody abody = mapper.readValue(sc.nextLine(), Abody.class);
 				
 				// Ignore DynaCalc & Images
-				if (abody.getType().equalsIgnoreCase("DynaCalc") || abody.getType().equalsIgnoreCase("Image")) {
+				if (abody.getType().equalsIgnoreCase("DynaCalc") || abody.getType().equalsIgnoreCase("Image") || abody.getType().equalsIgnoreCase("DynaRedirector")) {
 					continue;
 				}
 				

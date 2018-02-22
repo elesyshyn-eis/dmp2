@@ -59,10 +59,12 @@ public class SearchRequestBuilder {
     	}
          
     	// #4. Add all the queries to a dis-max query. This will pick the best match out of the three queries
-        disMaxTitleQueries = queryFactory.getDisMaxQuery(1.4f, 0.0f, titleSurfaceFormsQuery, titleQuery, andConditionBuilder);
+    	// 02/21/18: Reduced the title weight to 1
+        disMaxTitleQueries = queryFactory.getDisMaxQuery(1f, 0.0f, titleSurfaceFormsQuery, titleQuery, andConditionBuilder);
         
         ///////////// Create the criteria for the section fields /////////////////
-        QueryBuilder disMaxSectionQueries = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 1f, ScoreMode.Max, fieldsToHighlight, criteria, decayVectors);
+       	// 02/21/18: Reduced the section factor to 0.1
+        QueryBuilder disMaxSectionQueries = queryFactory.getNestedMatchQuery("sections.content", "sections.weight", 0.1f, ScoreMode.Max, fieldsToHighlight, criteria, decayVectors);
             
         ///////////// Combine the title and section queries together /////////////////
         BoolQueryBuilder bool = queryFactory.getBooleanQuery();
@@ -71,7 +73,7 @@ public class SearchRequestBuilder {
         searchSourceBuilder.query(bool);
         
         // Indicate which fields to return
-        String[] fieldsToReturn = new String[]{"title", "titleConcepts", "titleSurfaceForms"};
+        String[] fieldsToReturn = new String[]{"title", "titleConcepts", "titleSurfaceForms", "type"};
         searchSourceBuilder.fetchSource(fieldsToReturn, null);
 
         // convert the query into a json string that elasticsearch knows how to process
