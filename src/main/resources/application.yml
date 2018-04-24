@@ -11,7 +11,48 @@ swagger:
   title: DMP 2.0 - Semantic Search POC
   description: DMP 2.0 POC
   version: 1.0.0
-  
+
 endpoints:
   enabled: true
   sensitive: false
+
+workflows:
+  DMP2:
+    name: DMP2 Search
+    matrix: DMP2-V1-20180419
+    workers:
+      validators:
+        - queryValidator
+        - dmp2FieldValidator
+      enrichers:
+        - semanticEnricher
+      searchers:
+        - dmp2Searcher
+      renderers:
+        - dmp2Renderer
+      loggers:
+        - transactionLogger
+        - requestLogger 
+                 
+matrix:
+  DMP2-V1-20180419:
+    action: 
+      hypernym expansion:
+        condition:
+          concept type:
+            - product
+            - substance
+      best permutation:
+        condition:
+          concept type:
+            - body structure
+            - disorder
+            - finding
+            - morphologic abnormality   
+            
+            
+           
+          
+         
+
+           
